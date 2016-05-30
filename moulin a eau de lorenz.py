@@ -1,6 +1,6 @@
 from tkinter import *
 from math import pi,sin,cos
-from PIL import
+from PIL import Image
 
 NB_CONE=12
 H=80
@@ -48,12 +48,12 @@ class cone:
     @property
     def h(self):
         return (self.masse/FACTEUR_mHL)**(1/3)
-        
+
     def updat(self):
         if abs(cos(cone.delta+self.position))*RAYON_CENTRAL<self.rayon and \
             sin(cone.delta+self.position)*RAYON_CENTRAL<.1 :
             self.masse+=DEBIT
-            
+
 
         self.masse-=self.h*TROU
         if self.masse<0:
@@ -78,7 +78,7 @@ class cone:
     def affich(self):
         x_centre=cos(cone.delta+self.position)*RAYON_CENTRAL+T/2
         y_haut=sin(cone.delta+self.position)*RAYON_CENTRAL+T/2
-        
+
         C.create_polygon(x_centre,y_haut+self.hauteur,
                          x_centre-self.rayon*(self.h/self.hauteur),y_haut+self.hauteur-self.h,
                          x_centre+self.rayon*(self.h/self.hauteur),y_haut+self.hauteur-self.h,
@@ -100,7 +100,7 @@ class cone:
             Y+=y*obj.masse
             masse+=obj.masse
         return X/masse, Y/masse
-            
+
     @staticmethod
     def update():
         cone.vitesse+=cone.acceleration()*VITESSE
@@ -114,7 +114,7 @@ class cone:
     def couleur(nb,nb_max ):
         pos=nb+nb_max/2
         pos*=size[0]/nb_max
-        
+
         r,g,b,alpha=pix[round(pos),size[1]//2]
         return '#'+hex(r)[2:].rjust(2,'0')+hex(g)[2:].rjust(2,'0')+hex(b)[2:].rjust(2,'0')
 
@@ -124,14 +124,14 @@ class cone:
         for obj in self.L:
             masse+=obj.masse
         return masse
-    
+
 def ligne(x1,y1,x2,y2,x_pos,y_pos):
     x1,y1,x2,y2=map(lambda x:(x*RAYON_CENTRAL +RAYON_CENTRAL)/RAYON_CENTRAL*T/4,(x1,y1,x2,y2))
     x1,x2=x1+x_pos*T/2,x2+x_pos*T/2
     y1,y2=y1+y_pos*T/2,y2+y_pos*T/2
-    
+
     return x1,y1,x2,y2
-    
+
 for i in range(NB_CONE):cone(i)
 def tour():
     global x_avant,y_avant,acc_avant, masse_avant
