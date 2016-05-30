@@ -1,11 +1,11 @@
 from tkinter import *
 from math import pi,sin,cos
-from PIL import Image
+from PIL import
 
 NB_CONE=12
 H=80
 RAYON=50
-DEBIT=15000
+DEBIT=14500
 FACTEUR_mHL=(H**2)/(RAYON**2)/3
 RAYON_CENTRAL=300
 T=800
@@ -13,10 +13,14 @@ TROU=12
 DELTA=.1
 FROTTEMENT=.98
 VITESSE=.4
-vitesse_max=0.4
+vitesse_max=0.08
+masse_max=FACTEUR_mHL*(H**3)*NB_CONE
 
 x_avant,y_avant=-1,-1
+acc_avant, masse_avant=-1,-1
 fen =Tk()
+fen.geometry(str(T*2)+'x'+str(T)+'+50+5')
+fen.title('Moulin à eau de Lorenz     --- Etienne ROSIGNOL --- ')
 C=Canvas(fen,width=T,height=T)
 C.pack(side=LEFT)
 graphe=Canvas(fen,width=T,height=T)
@@ -25,6 +29,10 @@ graphe.pack(side=LEFT)
 im=Image.open("degrade.png")
 size = im.size
 pix=im.load()
+graphe.create_line(0,T/4*3,T/2,T/4*3)
+graphe.create_line(T/4,0,T/4,T)
+graphe.create_line(0,T/4,T,T/4)
+graphe.create_line(T/4*3,0,T/4*3,T/2)
 
 class cone:
     vitesse=0
@@ -102,32 +110,57 @@ class cone:
             obj.updat()
             obj.affich()
 
-    @classmethod
-    def couleur(class1):
-        pos=class1.vitesse+vitesse_max/2
-        pos*=size[0]/vitesse_max
+    @staticmethod
+    def couleur(nb,nb_max ):
+        pos=nb+nb_max/2
+        pos*=size[0]/nb_max
         
-        r,g,b=pix[round(pos),size[1]//2]
-        return '#'+hex(r)+hex(g)+hex(b)
+        r,g,b,alpha=pix[round(pos),size[1]//2]
+        return '#'+hex(r)[2:].rjust(2,'0')+hex(g)[2:].rjust(2,'0')+hex(b)[2:].rjust(2,'0')
 
+    @classmethod
+    def masse_t(self):
+        masse=0
+        for obj in self.L:
+            masse+=obj.masse
+        return masse
+    
+def ligne(x1,y1,x2,y2,x_pos,y_pos):
+    x1,y1,x2,y2=map(lambda x:(x*RAYON_CENTRAL +RAYON_CENTRAL)/RAYON_CENTRAL*T/4,(x1,y1,x2,y2))
+    x1,x2=x1+x_pos*T/2,x2+x_pos*T/2
+    y1,y2=y1+y_pos*T/2,y2+y_pos*T/2
+    
+    return x1,y1,x2,y2
+    
 for i in range(NB_CONE):cone(i)
-
 def tour():
-    global x_avant,y_avant
+    global x_avant,y_avant,acc_avant, masse_avant
     C.delete(ALL)
     cone.update()
-    C.create_line(T/2,0,T/2,100,fill='blue',smooth=True,width=5)
+    C.create_line(T/2,0,T/2,100,fill='red',smooth=True,width=5)
 
     x,y=cone.L[0].centre_gravite
+    acc,masse= cone.acceleration(),cone.masse_t()
 
     C.create_oval(x*RAYON_CENTRAL+T/2-5,y*RAYON_CENTRAL+T/2-5,
-                  x*RAYON_CENTRAL+T/2+5,y*RAYON_CENTRAL+T/2+5,width=0,fill=cone.couleur())
+                  x*RAYON_CENTRAL+T/2+5,y*RAYON_CENTRAL+T/2+5,width=0,
+                  fill=cone.couleur(cone.vitesse, vitesse_max))
     C.create_line(T//2,y*RAYON_CENTRAL+T/2-25,T//2,y*RAYON_CENTRAL+T/2+25)
     if (x_avant,y_avant)!=(-1,-1):
-        graphe.create_line(x_avant*RAYON_CENTRAL+T/2,y_avant*RAYON_CENTRAL+T/2,
-                           x*RAYON_CENTRAL+T/2,y*RAYON_CENTRAL+T/2)
+        x1,y1,x2,y2=ligne(x_avant,y_avant,x,y,0,0)
+        graphe.create_line(x1,y1,x2,y2,fill=cone.couleur(cone.vitesse, vitesse_max))
+
+        x1,y1,x2,y2=ligne(x_avant,y_avant,x,y,1,0)
+        graphe.create_line(x1,y1,x2,y2,fill=cone.couleur((cone.masse_t()-masse_max/4)*2, masse_max))
+
+        x1,y1,x2,y2=ligne(acc_avant*RAYON_CENTRAL, (masse_avant-masse_max/2)/masse_max*2,
+                          acc*RAYON_CENTRAL,(masse_avant-masse_max/2)/masse_max*2,0,1)
+        graphe.create_line(x1,y1,x2,y2,fill=cone.couleur(cone.vitesse, vitesse_max))
+
+    acc_avant, masse_avant=acc,masse
     x_avant,y_avant=x,y
-    fen.after(50, tour)
+
+    fen.after(40, tour)
 tour()
 
 fen.resizable(width=False,height=False)
